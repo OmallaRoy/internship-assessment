@@ -19,9 +19,12 @@ content_types = {
     ".aac": "audio/aac",
 }
 
+
 # function responsible for the transcribe logic
 def transcribe(audio_file):
-    audio = MutagenFile(audio_file)  # audio_file is the audio file to be processed
+    audio = MutagenFile(
+        audio_file
+    )  # audio_file is the audio file to be processed
     if audio is None:
         return "Unsupported audio format."
     duration = audio.info.length  # read duration of the audio file
@@ -37,7 +40,9 @@ def transcribe(audio_file):
         content_type = content_types[ext]
         files = {"audio": (filename, open(audio_file, "rb"), content_type)}
 
-        response = requests.post(BASE_URL + "/tasks/stt", headers=headers, files=files)
+        response = requests.post(
+            BASE_URL + "/tasks/stt", headers=headers, files=files
+        )
         if response.status_code == 200:
             return response.json()["audio_transcription"]
         else:
@@ -68,3 +73,30 @@ def summarise(text):
         return "Error: Request timed out. Please try again later."
     except requests.exceptions.RequestException as e:
         return f"Network error: {str(e)}"
+
+
+# function responsible for the translate logic
+def translate(text, language):
+    try:
+        response = requests.post(
+            BASE_URL + "/tasks/sunflower_simple",
+            headers=headers,
+            data={
+                "instruction": "Translate the following text to "
+                + language
+                + ":"
+                + text
+            },
+            timeout=180,
+        )
+        if response.status_code == 200:
+            return response.json()["response"]
+        elif response.status_code == 504:
+            return "Error: Server timeout. Please try again."
+        else:
+            return f"Error: {response.status_code} - {response.text}"
+    except requests.exceptions.Timeout:
+        return "Error: Request timed out. Please try again later."
+    except requests.exceptions.RequestException as e:
+        return f"Network error: {str(e)}"
+
