@@ -19,6 +19,15 @@ content_types = {
     ".aac": "audio/aac",
 }
 
+# mapping each language to its specific speaker id
+speaker_ids = {
+    "Luganda": 248,
+    "Runyankole": 243,
+    "Ateso": 242,
+    "Lugbara": 245,
+    "Acholi": 241,
+}
+
 
 # function responsible for the transcribe logic
 def transcribe(audio_file):
@@ -35,16 +44,18 @@ def transcribe(audio_file):
         filename = os.path.basename(audio_file)
         ext = os.path.splitext(audio_file)[1].lower()
         if ext not in content_types:
-            return "Unsupported file format. Please upload MP3, WAV, OGG, M4A or AAC."
+            return "Unsupported file format.Please upload MP3, WAV, OGG, M4A or AAC."
 
         content_type = content_types[ext]
         files = {"audio": (filename, open(audio_file, "rb"), content_type)}
 
         response = requests.post(
-            BASE_URL + "/tasks/stt", headers=headers, files=files
+            BASE_URL + "/tasks/stt", headers=headers, files=files, timeout=180
         )
         if response.status_code == 200:
-            return response.json()["audio_transcription"]
+            return response.json()[
+                "audio_transcription"
+            ]  # return the response and get the audio transcription text in dictionary
         else:
             return f"Error: {response.status_code} - {response.text}"
 
@@ -52,7 +63,7 @@ def transcribe(audio_file):
         return "Audio file not discovered at the path."
 
 
-# function responsible for the transcribe logic
+# function responsible for the summarise logic
 def summarise(text):
 
     try:
@@ -64,7 +75,9 @@ def summarise(text):
             timeout=180,
         )
         if response.status_code == 200:
-            return response.json()["response"]
+            return response.json()[
+                "response"
+            ]  # return the response and get the response value(summarised text) in dictionary
         elif response.status_code == 504:
             return "Error: Server timeout. Please try again."
         else:
@@ -90,7 +103,9 @@ def translate(text, language):
             timeout=180,
         )
         if response.status_code == 200:
-            return response.json()["response"]
+            return response.json()[
+                "response"
+            ]  # return the response and get the response value(translated text) in dictionary
         elif response.status_code == 504:
             return "Error: Server timeout. Please try again."
         else:
@@ -100,3 +115,30 @@ def translate(text, language):
     except requests.exceptions.RequestException as e:
         return f"Network error: {str(e)}"
 
+
+# function responsible for the text to speech logic
+def text_to_speech(text, language):
+    try:
+
+        speaker_id = speaker_ids.get(language)
+        if speaker_id is None:
+            return "Error: Unsupported language selected."
+        response = requests.post(
+            BASE_URL + "/tasks/tts",
+            headers=headers,
+            json={"text": text, "speaker_id": speaker_id},
+            timeout=180,
+        )
+        if response.status_code == 200:
+            return response.json()["output"][
+                "audio_url"
+            ]  # return the response and tap into the output
+            #  dictionary to get the audio path(audio_url) value
+        elif response.status_code == 504:
+            return "Error: Server timeout. Please try again."
+        else:
+            return f"Error: {response.status_code} - {response.text}"
+    except requests.exceptions.Timeout:
+        return "Error: Request timed out. Please try again later."
+    except requests.exceptions.RequestException as e:
+        return f"Network error: {str(e)}"
