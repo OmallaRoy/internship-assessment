@@ -19,7 +19,7 @@ content_types = {
     ".aac": "audio/aac",
 }
 
-
+# function responsible for the transcribe logic
 def transcribe(audio_file):
     audio = MutagenFile(audio_file)  # audio_file is the audio file to be processed
     if audio is None:
@@ -47,6 +47,7 @@ def transcribe(audio_file):
         return "Audio file not discovered at the path."
 
 
+# function responsible for the transcribe logic
 def summarise(text):
 
     try:
