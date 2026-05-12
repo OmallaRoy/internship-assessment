@@ -3,3 +3,9 @@ venv
 **__pycache__
 .pytest_cache
 .env
+*.mp3
+*.wav
+*.ogg
+*.m4a
+*.aac
+audiotest.py
