@@ -15,7 +15,7 @@ content_types = {
     ".mp3": "audio/mpeg",
     ".wav": "audio/wav",
     ".ogg": "audio/ogg",
-    ".m4a": "audio/m4a",
+    ".m4a": "audio/mp4",# m4a uses audio/mp4 as its standard MIME type
     ".aac": "audio/aac",
 }
 
@@ -127,7 +127,7 @@ def text_to_speech(text, language):
             BASE_URL + "/tasks/tts",
             headers=headers,
             json={"text": text, "speaker_id": speaker_id},
-            timeout=180,
+            timeout=300,
         )
         if response.status_code == 200:
             return response.json()["output"][
