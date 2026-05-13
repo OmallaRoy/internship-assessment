@@ -156,27 +156,27 @@ Results stream in as each step completes so you do not have to wait for everythi
 
 **1. Default view with text input selected**
 
-![Text input view](https://raw.githubusercontent.com/OmallaRoy/internship-assessment/main/screenshots/01_text_input.png)
+![Text input view](https://raw.githubusercontent.com/OmallaRoy/internship-assessment/main/screenshots/01_text_input.jpg)
 
 **2. Audio upload view after switching input type**
 
-![Audio upload view](https://raw.githubusercontent.com/OmallaRoy/internship-assessment/main/screenshots/02_audio_upload.png)
+![Audio upload view](https://raw.githubusercontent.com/OmallaRoy/internship-assessment/main/screenshots/02_audio_upload.jpg)
 
 **3. Pipeline running with results appearing in real time**
 
-![Pipeline running](https://raw.githubusercontent.com/OmallaRoy/internship-assessment/main/screenshots/03_pipeline_running.png)
+![Pipeline running](https://raw.githubusercontent.com/OmallaRoy/internship-assessment/main/screenshots/03_pipeline_running.jpg)
 
 **4. Complete result showing all four outputs**
 
-![Full result](https://raw.githubusercontent.com/OmallaRoy/internship-assessment/main/screenshots/04_full_result.png)
+![Full result](https://raw.githubusercontent.com/OmallaRoy/internship-assessment/main/screenshots/04_full_result.jpg)
 
 **5. Validation error when no input is provided**
 
-![Error handling](https://raw.githubusercontent.com/OmallaRoy/internship-assessment/main/screenshots/05_error_handling.png)
+![Error handling](https://raw.githubusercontent.com/OmallaRoy/internship-assessment/main/screenshots/05_error_handling.jpg)
 
 **6. Audio duration error when file exceeds 5 minutes**
 
-![Audio too long error](https://raw.githubusercontent.com/OmallaRoy/internship-assessment/main/screenshots/06_audio_too_long.png)
+![Audio too long error](https://raw.githubusercontent.com/OmallaRoy/internship-assessment/main/screenshots/06_audio_too_long.jpg)
 
 ---
 
