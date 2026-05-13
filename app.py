@@ -45,7 +45,7 @@ def process(input_type, audio_file, text_input, language):
     Errors after a yield clear the outputs first to avoid showing
     Error labels in the output boxes.
     """
-    # validate inputs before running anything — no yield has happened yet
+    # validate inputs before running anything , no yield has happened yet
     if input_type == "Audio Upload":
         if audio_file is None:
             raise gr.Error("Please upload an audio file to continue.")
