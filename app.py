@@ -4,7 +4,7 @@ import os
 import requests as req
 import tempfile
 
-# ensure backend folder is accessible — allows imports from backend folder
+# ensure backend folder is accessible to allow imports from backend folder
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from backend.sunbird_client import (
     transcribe,
@@ -35,17 +35,46 @@ def download_audio(url):
         return None
 
 
+def show_error(message):
+    """
+    Returns a Gradio update that makes the error box visible
+    and displays the given message inside it.
+    """
+    return gr.update(visible=True, value=message)
+
+
+def hide_error():
+    """
+    Returns a Gradio update that hides the error box and clears it.
+    """
+    return gr.update(visible=False, value="")
+
+
+def show_audio_status(message):
+    """
+    Returns a Gradio update that makes the audio status box visible
+    and displays the given message inside it.
+    """
+    return gr.update(visible=True, value=message)
+
+
+def hide_audio_status():
+    """
+    Returns a Gradio update that hides the audio status box and clears it.
+    """
+    return gr.update(visible=False, value="")
+
+
 def process(input_type, audio_file, text_input, language):
     """
     Main processing function with streaming.
     Yields intermediate results as each pipeline step completes
     so the user sees progress in real time rather than waiting
     for everything to finish.
-    Errors before any yield use gr.Error() for popup notification.
-    Errors after a yield clear the outputs first to avoid showing
-    Error labels in the output boxes.
+    Errors are surfaced through a dedicated error display box
+    so the output boxes remain clean at all times.
     """
-    # validate inputs before running anything , no yield has happened yet
+    # validate inputs before running anything, no yield has happened yet
     if input_type == "Audio Upload":
         if audio_file is None:
             raise gr.Error("Please upload an audio file to continue.")
@@ -56,62 +85,83 @@ def process(input_type, audio_file, text_input, language):
     if not language:
         raise gr.Error("Please select an output language to continue.")
 
-    # step 1 of transcription
-    yield "Processing your input...", "", "", None
+    # clear any previous error and show processing state
+    yield "Processing your input...", "", "", None, hide_error(), hide_audio_status()
 
+    # step 1 of transcription
     if input_type == "Audio Upload":
         try:
             transcript = transcribe(audio_file)
         except TranscriptionError as e:
-            # clear outputs then raise so boxes do not show Error label
-            yield "", "", "", None
-            raise gr.Error(str(e))
+            yield "", "", "", None, show_error(str(e)), hide_audio_status()
+            return
     else:
         transcript = text_input
 
     yield (
         transcript,
-        "Generating a summary — this may take up to 2 minutes...",
+        "Generating a summary — this may take up to 5 minutes...",
         "",
         None,
+        hide_error(),
+        hide_audio_status(),
     )
 
     # step 2 of summarisation
     try:
         summary = summarise(transcript)
     except SummarisationError as e:
-        yield transcript, "", "", None
-        raise gr.Error(str(e))
+        yield transcript, "", "", None, show_error(str(e)), hide_audio_status()
+        return
 
-    yield transcript, summary, "Translating the summary...", None
+    yield transcript, summary, "Translating the summary...", None, hide_error(), hide_audio_status()
 
     # step 3 of translation
     try:
         translation = translate(summary, language)
     except TranslationError as e:
-        yield transcript, summary, "", None
-        raise gr.Error(str(e))
+        yield transcript, summary, "", None, show_error(
+            str(e)
+        ), hide_audio_status()
+        return
 
-    yield transcript, summary, translation, None
+    # show audio generating status before calling TTS
+    yield (
+        transcript,
+        summary,
+        translation,
+        None,
+        hide_error(),
+        show_audio_status("Generating audio — please wait..."),
+    )
 
     # step 4 of text to speech
     try:
         audio_url = text_to_speech(translation, language)
     except TextToSpeechError as e:
-        yield transcript, summary, translation, None
-        raise gr.Error(str(e))
+        yield transcript, summary, translation, None, show_error(
+            str(e)
+        ), hide_audio_status()
+        return
 
     # download audio immediately as signed URL expires in 2 minutes
     local_audio = download_audio(audio_url)
 
     if local_audio is None:
-        yield transcript, summary, translation, None
-        raise gr.Error(
-            "The audio was generated but could not be loaded. "
-            "Please try again."
+        yield (
+            transcript,
+            summary,
+            translation,
+            None,
+            show_error(
+                "The audio was generated but could not be loaded. "
+                "Please try again."
+            ),
+            hide_audio_status(),
         )
+        return
 
-    yield transcript, summary, translation, local_audio
+    yield transcript, summary, translation, local_audio, hide_error(), hide_audio_status()
 
 
 def toggle_input(input_type):
@@ -146,6 +196,27 @@ CSS = """
     border: 1px solid #e5e7eb;
     border-radius: 10px;
     padding: 20px 24px;
+}
+#error-box textarea {
+    background: #fef2f2 !important;
+    border: 1px solid #fca5a5 !important;
+    color: #991b1b !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+}
+#error-box .label-wrap {
+    display: none !important;
+}
+#audio-status textarea {
+    background: #fffbeb !important;
+    border: 1px solid #fcd34d !important;
+    color: #92400e !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    text-align: center !important;
+}
+#audio-status .label-wrap {
+    display: none !important;
 }
 footer {
     display: none !important;
@@ -190,13 +261,13 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
                     </p>
                     <ol style="margin: 0; padding-left: 18px;
                     color: #374151; font-size: 14px; line-height: 2.2;">
-                        <li><strong>Transcription</strong> — Your audio
+                        <li><strong>Transcription</strong> : Your audio
                         file is converted to text automatically</li>
-                        <li><strong>Summarisation</strong> — The text is
+                        <li><strong>Summarisation</strong> : The text is
                         condensed into a short, clear summary</li>
-                        <li><strong>Translation</strong> — The summary is
+                        <li><strong>Translation</strong> : The summary is
                         translated into your chosen local language</li>
-                        <li><strong>Audio Generation</strong> — The
+                        <li><strong>Audio Generation</strong> : The
                         translated summary is read aloud and made
                         available to play</li>
                     </ol>
@@ -211,7 +282,7 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
                 interactive=True,
             )
 
-            # text input  visible by default
+            # text input visible by default
             text_input = gr.Textbox(
                 label="Enter Text",
                 placeholder="Paste or type your text here...",
@@ -219,7 +290,7 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
                 visible=True,
             )
 
-            # audio input,hidden by default
+            # audio input hidden by default
             audio_input = gr.Audio(
                 label=(
                     "Upload Audio File "
@@ -275,11 +346,20 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
                     padding-top: 12px; margin: 0;">
                         Processing time varies depending on the length
                         of your input. Summarisation typically takes
-                        between 30 seconds and 2 minutes. Results appear
+                        between 30 seconds and 5 minutes. Results appear
                         as each step completes.
                     </p>
                 </div>
                 """)
+
+    # dedicated error display, hidden by default and shown only on errors
+    error_output = gr.Textbox(
+        visible=False,
+        label="Error",
+        interactive=False,
+        lines=2,
+        elem_id="error-box",
+    )
 
     # results section
     gr.Markdown("---")
@@ -328,6 +408,14 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
 
     with gr.Row():
         with gr.Column():
+            # audio status shown while audio is being generated
+            audio_status = gr.Textbox(
+                visible=False,
+                label="",
+                interactive=False,
+                lines=1,
+                elem_id="audio-status",
+            )
             audio_output = gr.Audio(
                 label="Generated Audio",
                 interactive=False,
@@ -350,6 +438,8 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
             summary_output,
             translation_output,
             audio_output,
+            error_output,
+            audio_status,
         ],
     )
 
