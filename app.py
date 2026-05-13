@@ -1,8 +1,10 @@
 import gradio as gr
 import sys
 import os
+import requests as req
+import tempfile
 
-# ensure backend folder is accessible ,allows imports from backend folder
+# ensure backend folder is accessible — allows imports from backend folder
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from backend.sunbird_client import (
     transcribe,
@@ -10,6 +12,23 @@ from backend.sunbird_client import (
     translate,
     text_to_speech,
 )
+
+
+def download_audio(url):
+    """
+    Downloads audio from a signed URL and saves it to a temp file.
+    Returns the local file path for Gradio to play.
+    """
+    try:
+        response = req.get(url, timeout=60)
+        response.raise_for_status()
+        with tempfile.NamedTemporaryFile(
+            delete=False, suffix=".mp3"
+        ) as tmp:
+            tmp.write(response.content)
+            return tmp.name
+    except Exception:
+        return None
 
 
 def process(input_type, audio_file, text_input, language):
@@ -20,57 +39,119 @@ def process(input_type, audio_file, text_input, language):
     # validate inputs
     if input_type == "Audio Upload":
         if audio_file is None:
-            yield "Please upload an audio file.", "", "", None
+            yield "Please upload an audio file to continue.", "", "", None
             return
     else:
         if not text_input or text_input.strip() == "":
-            yield "Please enter some text.", "", "", None
+            yield "Please enter some text to continue.", "", "", None
             return
 
     if not language:
-        yield "Please select a language.", "", "", None
+        yield "Please select an output language.", "", "", None
         return
 
-    # step 1 of transcription
-    yield "Transcribing...", "", "", None
+    # step 1 — transcription
+    yield "Processing your input...", "", "", None
 
     if input_type == "Audio Upload":
         transcript = transcribe(audio_file)
+        # handle transcription errors with user friendly messages
+        if "502" in transcript or "EXTERNAL_SERVICE_ERROR" in transcript:
+            yield (
+                "The audio could not be transcribed. "
+                "Please ensure the audio is clear and not silent, "
+                "then try again.",
+                "", "", None,
+            )
+            return
+        if transcript.startswith("Error") or transcript.startswith(
+            "Unsupported"
+        ):
+            yield (
+                "There was a problem processing your audio file. "
+                "Please check the file format and try again.",
+                "", "", None,
+            )
+            return
+        if "Audio file exceeds" in transcript:
+            yield (
+                "Your audio file is longer than 5 minutes. "
+                "Please upload a shorter recording.",
+                "", "", None,
+            )
+            return
     else:
         transcript = text_input
 
-    if transcript.startswith("Error") or transcript.startswith("Unsupported"):
-        yield transcript, "", "", None
-        return
+    yield (
+        transcript,
+        "Generating a summary — this may take up to 2 minutes...",
+        "", None,
+    )
 
-    yield transcript, "Summarising — this may take up to 2 minutes...", "", None
-
-    # step 2 of summarisation
+    # step 2 — summarisation
     summary = summarise(transcript)
 
-    if summary.startswith("Error") or summary.startswith("Network"):
-        yield transcript, summary, "", None
+    if (
+        summary.startswith("Error")
+        or summary.startswith("Network")
+        or "timeout" in summary.lower()
+    ):
+        yield (
+            transcript,
+            "Summarisation failed. The server may be busy. "
+            "Please try again in a moment.",
+            "", None,
+        )
         return
 
-    yield transcript, summary, "Translating...", None
+    yield transcript, summary, "Translating the summary...", None
 
-    # step 3 of translation
+    # step 3 — translation
     translation = translate(summary, language)
 
-    if translation.startswith("Error") or translation.startswith("Network"):
-        yield transcript, summary, translation, None
+    if (
+        translation.startswith("Error")
+        or translation.startswith("Network")
+        or "timeout" in translation.lower()
+    ):
+        yield (
+            transcript,
+            summary,
+            "Translation failed. Please try again.",
+            None,
+        )
         return
 
     yield transcript, summary, translation, None
 
-    # step 4 of text to speech
+    # step 4 — text to speech
     audio_url = text_to_speech(translation, language)
 
-    if isinstance(audio_url, str) and audio_url.startswith("Error"):
-        yield transcript, summary, translation, None
+    if isinstance(audio_url, str) and (
+        audio_url.startswith("Error") or "timeout" in audio_url.lower()
+    ):
+        yield (
+            transcript,
+            summary,
+            translation,
+            None,
+        )
         return
 
-    yield transcript, summary, translation, audio_url
+    # download audio locally for Gradio to play
+    local_audio = download_audio(audio_url)
+
+    if local_audio is None:
+        yield (
+            transcript,
+            summary,
+            translation,
+            None,
+        )
+        return
+
+    yield transcript, summary, translation, local_audio
 
 
 def toggle_input(input_type):
@@ -86,41 +167,42 @@ def toggle_input(input_type):
 # supported languages
 LANGUAGES = ["Luganda", "Runyankole", "Ateso", "Lugbara", "Acholi"]
 
+CSS = """
+.gradio-container {
+    max-width: 960px !important;
+    margin: auto;
+    font-family: 'DM Sans', sans-serif;
+}
+.how-it-works {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+}
+.info-box {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 20px 24px;
+}
+footer {
+    display: none !important;
+}
+"""
+
+THEME = gr.themes.Soft(
+    primary_hue="orange",
+    secondary_hue="gray",
+    font=gr.themes.GoogleFont("DM Sans"),
+)
+
 # build the UI
-with gr.Blocks(
-    title="Sunbird AI Language Pipeline",
-    theme=gr.themes.Soft(
-        primary_hue="orange",
-        secondary_hue="gray",
-        font=gr.themes.GoogleFont("DM Sans"),
-    ),
-    css="""
-    .gradio-container {
-        max-width: 960px !important;
-        margin: auto;
-        font-family: 'DM Sans', sans-serif;
-    }
-    .how-it-works {
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
-        border-radius: 10px;
-        padding: 20px 24px;
-        margin-bottom: 16px;
-    }
-    .info-box {
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
-        border-radius: 10px;
-        padding: 20px 24px;
-    }
-    footer {
-        display: none !important;
-    }
-    """,
-) as demo:
+with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
 
     # header
-    gr.Markdown("""
+    gr.Markdown(
+        """
         <div style="text-align: center; padding: 30px 0 20px 0;
         border-bottom: 1px solid #e5e7eb; margin-bottom: 24px;">
             <h1 style="font-size: 26px; font-weight: 700;
@@ -132,7 +214,8 @@ with gr.Blocks(
                 and spoken output in a Ugandan local language.
             </p>
         </div>
-        """)
+        """
+    )
 
     with gr.Row(equal_height=False):
 
@@ -140,7 +223,8 @@ with gr.Blocks(
         with gr.Column(scale=3):
 
             # how it works
-            gr.Markdown("""
+            gr.Markdown(
+                """
                 <div class="how-it-works">
                     <p style="font-weight: 600; font-size: 14px;
                     margin-bottom: 12px; color: #111827;">
@@ -159,7 +243,8 @@ with gr.Blocks(
                         available to play</li>
                     </ol>
                 </div>
-                """)
+                """
+            )
 
             # input type selection
             input_type = gr.Radio(
@@ -204,7 +289,8 @@ with gr.Blocks(
 
         # right column — info panel
         with gr.Column(scale=2):
-            gr.Markdown("""
+            gr.Markdown(
+                """
                 <div class="info-box">
                     <p style="font-weight: 600; font-size: 14px;
                     margin-bottom: 12px; color: #111827;">
@@ -237,11 +323,13 @@ with gr.Blocks(
                         as each step completes.
                     </p>
                 </div>
-                """)
+                """
+            )
 
     # divider and results header
     gr.Markdown("---")
-    gr.Markdown("""
+    gr.Markdown(
+        """
         <p style="font-weight: 600; font-size: 16px;
         color: #111827; margin-bottom: 4px;">
             Pipeline Results
@@ -249,7 +337,8 @@ with gr.Blocks(
         <p style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">
             Results appear below as each step of the pipeline completes.
         </p>
-        """)
+        """
+    )
 
     # output components
     with gr.Row():
@@ -313,4 +402,7 @@ with gr.Blocks(
     )
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(
+        theme=THEME,
+        css=CSS,
+    )

@@ -15,7 +15,7 @@ content_types = {
     ".mp3": "audio/mpeg",
     ".wav": "audio/wav",
     ".ogg": "audio/ogg",
-    ".m4a": "audio/mp4",# m4a uses audio/mp4 as its standard MIME type
+    ".m4a": "audio/mp4",  # m4a uses audio/mp4 as its standard MIME type
     ".aac": "audio/aac",
 }
 
