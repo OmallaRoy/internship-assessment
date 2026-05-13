@@ -4,7 +4,7 @@ import os
 import requests as req
 import tempfile
 
-# ensure backend folder is accessible — allows imports from backend folder
+# ensure backend folder is accessible as it allows imports from backend folder
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from backend.sunbird_client import (
     transcribe,
@@ -22,9 +22,7 @@ def download_audio(url):
     try:
         response = req.get(url, timeout=60)
         response.raise_for_status()
-        with tempfile.NamedTemporaryFile(
-            delete=False, suffix=".mp3"
-        ) as tmp:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
             tmp.write(response.content)
             return tmp.name
     except Exception:
@@ -61,7 +59,9 @@ def process(input_type, audio_file, text_input, language):
                 "The audio could not be transcribed. "
                 "Please ensure the audio is clear and not silent, "
                 "then try again.",
-                "", "", None,
+                "",
+                "",
+                None,
             )
             return
         if transcript.startswith("Error") or transcript.startswith(
@@ -70,14 +70,18 @@ def process(input_type, audio_file, text_input, language):
             yield (
                 "There was a problem processing your audio file. "
                 "Please check the file format and try again.",
-                "", "", None,
+                "",
+                "",
+                None,
             )
             return
         if "Audio file exceeds" in transcript:
             yield (
                 "Your audio file is longer than 5 minutes. "
                 "Please upload a shorter recording.",
-                "", "", None,
+                "",
+                "",
+                None,
             )
             return
     else:
@@ -86,10 +90,11 @@ def process(input_type, audio_file, text_input, language):
     yield (
         transcript,
         "Generating a summary — this may take up to 2 minutes...",
-        "", None,
+        "",
+        None,
     )
 
-    # step 2 — summarisation
+    # step 2 of summarisation
     summary = summarise(transcript)
 
     if (
@@ -101,13 +106,14 @@ def process(input_type, audio_file, text_input, language):
             transcript,
             "Summarisation failed. The server may be busy. "
             "Please try again in a moment.",
-            "", None,
+            "",
+            None,
         )
         return
 
     yield transcript, summary, "Translating the summary...", None
 
-    # step 3 — translation
+    # step 3 of translation
     translation = translate(summary, language)
 
     if (
@@ -125,7 +131,7 @@ def process(input_type, audio_file, text_input, language):
 
     yield transcript, summary, translation, None
 
-    # step 4 — text to speech
+    # step 4 of text to speech
     audio_url = text_to_speech(translation, language)
 
     if isinstance(audio_url, str) and (
@@ -139,7 +145,7 @@ def process(input_type, audio_file, text_input, language):
         )
         return
 
-    # download audio locally for Gradio to play
+    # download audio locally for gradio to play
     local_audio = download_audio(audio_url)
 
     if local_audio is None:
@@ -201,8 +207,7 @@ THEME = gr.themes.Soft(
 with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
 
     # header
-    gr.Markdown(
-        """
+    gr.Markdown("""
         <div style="text-align: center; padding: 30px 0 20px 0;
         border-bottom: 1px solid #e5e7eb; margin-bottom: 24px;">
             <h1 style="font-size: 26px; font-weight: 700;
@@ -214,17 +219,15 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
                 and spoken output in a Ugandan local language.
             </p>
         </div>
-        """
-    )
+        """)
 
     with gr.Row(equal_height=False):
 
-        # left column — input and controls
+        # left column with input and controls
         with gr.Column(scale=3):
 
             # how it works
-            gr.Markdown(
-                """
+            gr.Markdown("""
                 <div class="how-it-works">
                     <p style="font-weight: 600; font-size: 14px;
                     margin-bottom: 12px; color: #111827;">
@@ -243,8 +246,7 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
                         available to play</li>
                     </ol>
                 </div>
-                """
-            )
+                """)
 
             # input type selection
             input_type = gr.Radio(
@@ -254,7 +256,7 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
                 interactive=True,
             )
 
-            # text input — visible by default
+            # text input, visible by default
             text_input = gr.Textbox(
                 label="Enter Text",
                 placeholder="Paste or type your text here...",
@@ -262,7 +264,7 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
                 visible=True,
             )
 
-            # audio input — hidden by default
+            # audio input that is  hidden by default
             audio_input = gr.Audio(
                 label=(
                     "Upload Audio File "
@@ -287,10 +289,9 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
                 size="lg",
             )
 
-        # right column — info panel
+        # right column for info panel
         with gr.Column(scale=2):
-            gr.Markdown(
-                """
+            gr.Markdown("""
                 <div class="info-box">
                     <p style="font-weight: 600; font-size: 14px;
                     margin-bottom: 12px; color: #111827;">
@@ -323,13 +324,11 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
                         as each step completes.
                     </p>
                 </div>
-                """
-            )
+                """)
 
     # divider and results header
     gr.Markdown("---")
-    gr.Markdown(
-        """
+    gr.Markdown("""
         <p style="font-weight: 600; font-size: 16px;
         color: #111827; margin-bottom: 4px;">
             Pipeline Results
@@ -337,8 +336,7 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
         <p style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">
             Results appear below as each step of the pipeline completes.
         </p>
-        """
-    )
+        """)
 
     # output components
     with gr.Row():
