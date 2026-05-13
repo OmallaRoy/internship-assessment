@@ -5,6 +5,24 @@ from mutagen import File as MutagenFile
 
 load_dotenv()
 
+
+# Exception classes
+class TranscriptionError(Exception):
+    pass
+
+
+class SummarisationError(Exception):
+    pass
+
+
+class TranslationError(Exception):
+    pass
+
+
+class TextToSpeechError(Exception):
+    pass
+
+
 BASE_URL = "https://api.sunbird.ai"  # URL where all API requests are made to
 API_TOKEN = os.getenv("SUNBIRD_API_TOKEN")
 
@@ -31,20 +49,25 @@ speaker_ids = {
 
 # function responsible for the transcribe logic
 def transcribe(audio_file):
+
     audio = MutagenFile(
         audio_file
     )  # audio_file is the audio file to be processed
     if audio is None:
-        return "Unsupported audio format."
+        raise TranscriptionError("Unsupported audio format.")
     duration = audio.info.length  # read duration of the audio file
     if duration > 300:
-        return "Audio file exceeds 5 minutes. Please upload a shorter file."
+        raise TranscriptionError(
+            "Audio file exceeds 5 minutes. Please upload a shorter audio file"
+        )
 
     try:
         filename = os.path.basename(audio_file)
         ext = os.path.splitext(audio_file)[1].lower()
         if ext not in content_types:
-            return "Unsupported file format.Please upload MP3, WAV, OGG, M4A or AAC."
+            raise TranscriptionError(
+                "Unsupported file format. Please upload MP3, WAV, OGG, M4A or AAC."
+            )
 
         content_type = content_types[ext]
         files = {"audio": (filename, open(audio_file, "rb"), content_type)}
@@ -57,10 +80,12 @@ def transcribe(audio_file):
                 "audio_transcription"
             ]  # return the response and get the audio transcription text in dictionary
         else:
-            return f"Error: {response.status_code} - {response.text}"
+            raise TranscriptionError(
+                f"Transcription failed with status {response.status_code}."
+            )
 
     except FileNotFoundError:
-        return "Audio file not discovered at the path."
+        raise TranscriptionError("Audio file not found.")
 
 
 # function responsible for the summarise logic
@@ -79,13 +104,16 @@ def summarise(text):
                 "response"
             ]  # return the response and get the response value(summarised text) in dictionary
         elif response.status_code == 504:
-            return "Error: Server timeout. Please try again."
+            raise SummarisationError("Server timeout. Please try again.")
+
         else:
-            return f"Error: {response.status_code} - {response.text}"
+            raise SummarisationError(
+                f"Summarisation failed with status {response.status_code}."
+            )
     except requests.exceptions.Timeout:
-        return "Error: Request timed out. Please try again later."
+        raise SummarisationError("Request timed out. Please try again later.")
     except requests.exceptions.RequestException as e:
-        return f"Network error: {str(e)}"
+        raise SummarisationError(f"Network error: {str(e)}")
 
 
 # function responsible for the translate logic
@@ -107,13 +135,15 @@ def translate(text, language):
                 "response"
             ]  # return the response and get the response value(translated text) in dictionary
         elif response.status_code == 504:
-            return "Error: Server timeout. Please try again."
+            raise TranslationError("Server timeout. Please try again.")
         else:
-            return f"Error: {response.status_code} - {response.text}"
+            raise TranslationError(
+                f"Translation failed with status {response.status_code}."
+            )
     except requests.exceptions.Timeout:
-        return "Error: Request timed out. Please try again later."
+        raise TranslationError("Request timed out. Please try again later.")
     except requests.exceptions.RequestException as e:
-        return f"Network error: {str(e)}"
+        raise TranslationError(f"Network error: {str(e)}")
 
 
 # function responsible for the text to speech logic
@@ -122,7 +152,7 @@ def text_to_speech(text, language):
 
         speaker_id = speaker_ids.get(language)
         if speaker_id is None:
-            return "Error: Unsupported language selected."
+            raise TextToSpeechError("Unsupported language selected.")
         response = requests.post(
             BASE_URL + "/tasks/tts",
             headers=headers,
@@ -135,10 +165,12 @@ def text_to_speech(text, language):
             ]  # return the response and tap into the output
             #  dictionary to get the audio path(audio_url) value
         elif response.status_code == 504:
-            return "Error: Server timeout. Please try again."
+            raise TextToSpeechError("Server timeout. Please try again.")
         else:
-            return f"Error: {response.status_code} - {response.text}"
+            raise TextToSpeechError(
+                f"Audio generation failed with status {response.status_code}."
+            )
     except requests.exceptions.Timeout:
-        return "Error: Request timed out. Please try again later."
+        raise TextToSpeechError("Request timed out. Please try again later.")
     except requests.exceptions.RequestException as e:
-        return f"Network error: {str(e)}"
+        raise TextToSpeechError(f"Network error: {str(e)}")
