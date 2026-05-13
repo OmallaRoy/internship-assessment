@@ -73,7 +73,7 @@ def transcribe(audio_file):
         files = {"audio": (filename, open(audio_file, "rb"), content_type)}
 
         response = requests.post(
-            BASE_URL + "/tasks/stt", headers=headers, files=files, timeout=180
+            BASE_URL + "/tasks/stt", headers=headers, files=files, timeout=300
         )
         if response.status_code == 200:
             return response.json()[
@@ -97,7 +97,7 @@ def summarise(text):
             BASE_URL + "/tasks/sunflower_simple",
             headers=headers,
             data={"instruction": "Summarise the following text: " + text},
-            timeout=180,
+            timeout=300,
         )
         if response.status_code == 200:
             return response.json()[
@@ -128,7 +128,7 @@ def translate(text, language):
                 + ":"
                 + text
             },
-            timeout=180,
+            timeout=300,
         )
         if response.status_code == 200:
             return response.json()[
