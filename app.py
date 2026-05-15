@@ -233,7 +233,8 @@ THEME = gr.themes.Soft(
 with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
 
     # page header
-    gr.Markdown("""
+    gr.Markdown(
+        """
         <div style="text-align: center; padding: 30px 0 20px 0;
         border-bottom: 1px solid #e5e7eb; margin-bottom: 24px;">
             <h1 style="font-size: 26px; font-weight: 700;
@@ -245,7 +246,9 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
                 and spoken output in a Ugandan local language.
             </p>
         </div>
-        """)
+        """,
+        sanitize_html=False,
+    )
 
     with gr.Row(equal_height=False):
 
@@ -253,7 +256,8 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
         with gr.Column(scale=3):
 
             # how it works section
-            gr.Markdown("""
+            gr.Markdown(
+                """
                 <div class="how-it-works">
                     <p style="font-weight: 600; font-size: 14px;
                     margin-bottom: 12px; color: #111827;">
@@ -272,7 +276,9 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
                         available to play</li>
                     </ol>
                 </div>
-                """)
+                """,
+                sanitize_html=False,
+            )
 
             # input type toggle
             input_type = gr.Radio(
@@ -317,7 +323,8 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
 
         # right column for info panel
         with gr.Column(scale=2):
-            gr.Markdown("""
+            gr.Markdown(
+                """
                 <div class="info-box">
                     <p style="font-weight: 600; font-size: 14px;
                     margin-bottom: 12px; color: #111827;">
@@ -350,7 +357,9 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
                         as each step completes.
                     </p>
                 </div>
-                """)
+                """,
+                sanitize_html=False,
+            )
 
     # dedicated error display, hidden by default and shown only on errors
     error_output = gr.Textbox(
@@ -363,7 +372,8 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
 
     # results section
     gr.Markdown("---")
-    gr.Markdown("""
+    gr.Markdown(
+        """
         <p style="font-weight: 600; font-size: 16px;
         color: #111827; margin-bottom: 4px;">
             Pipeline Results
@@ -371,7 +381,9 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
         <p style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">
             Results appear below as each step of the pipeline completes.
         </p>
-        """)
+        """,
+        sanitize_html=False,
+    )
 
     with gr.Row():
         with gr.Column():
