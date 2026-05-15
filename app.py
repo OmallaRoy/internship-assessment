@@ -443,8 +443,7 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
         ],
     )
 
-if __name__ == "__main__":
-    demo.launch(
-        theme=THEME,
-        css=CSS,
-    )
+demo.launch(
+    theme=THEME,
+    css=CSS,
+)
