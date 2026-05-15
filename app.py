@@ -427,6 +427,7 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
                 interactive=False,
                 lines=1,
                 elem_id="audio-status",
+                show_label=False,
             )
             audio_output = gr.Audio(
                 label="Generated Audio",
