@@ -52,17 +52,18 @@ def hide_error():
 
 def show_audio_status(message):
     """
-    Returns a Gradio update that makes the audio status box visible
-    and displays the given message inside it.
+    Returns a Gradio update that fills the audio status box with a message.
     """
-    return gr.update(visible=True, value=message)
+    return gr.update(
+        value=f'<div style="background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; border-radius: 8px; font-size: 14px; text-align: center; padding: 10px;">{message}</div>'
+    )
 
 
 def hide_audio_status():
     """
-    Returns a Gradio update that hides the audio status box and clears it.
+    Returns a Gradio update that clears the audio status box.
     """
-    return gr.update(visible=False, value="")
+    return gr.update(value="")
 
 
 def process(input_type, audio_file, text_input, language):
@@ -205,17 +206,6 @@ CSS = """
     font-size: 14px !important;
 }
 #error-box .label-wrap {
-    display: none !important;
-}
-#audio-status textarea {
-    background: #fffbeb !important;
-    border: 1px solid #fcd34d !important;
-    color: #92400e !important;
-    border-radius: 8px !important;
-    font-size: 14px !important;
-    text-align: center !important;
-}
-#audio-status .label-wrap {
     display: none !important;
 }
 footer {
@@ -422,13 +412,9 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
     with gr.Row():
         with gr.Column():
             # audio status shown while audio is being generated
-            audio_status = gr.Textbox(
-                visible=False,
-                label="",
-                interactive=False,
-                lines=1,
+            audio_status = gr.HTML(
+                value="",
                 elem_id="audio-status",
-                show_label=False,
             )
             audio_output = gr.Audio(
                 label="Generated Audio",
