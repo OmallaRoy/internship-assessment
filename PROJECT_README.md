@@ -184,7 +184,7 @@ Results stream in as each step completes so you do not have to wait for everythi
 ## Deployed Link
 
 [https://huggingface.co/spaces/OmallaRoy/uganda-speech-text-pipeline](https://huggingface.co/spaces/OmallaRoy/uganda-speech-text-pipeline)
-
+> **Note:** The application is hosted on the Hugging Face Spaces free tier, which automatically pauses the Space after a period of inactivity. A third-party monitoring service has been configured to ping the Space periodically to minimise cold starts, but an occasional short delay on first load may still occur.
 ---
 
 ## Known Limitations
