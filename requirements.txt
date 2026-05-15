@@ -1,6 +1,6 @@
 pytest
 requests
 python-dotenv
-gradio
+gradio==6.14.0
 httpx
 mutagen
