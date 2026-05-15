@@ -4,7 +4,7 @@ import os
 import requests as req
 import tempfile
 
-# ensures backend folder is accessible to allow imports from backend folder
+# ensure backend folder is accessible to allow imports from backend folder
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from backend.sunbird_client import (
     transcribe,
@@ -239,27 +239,15 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
         # left column with inputs and controls
         with gr.Column(scale=3):
 
-            # how it works section — inline styles used for Hugging Face compatibility
-            gr.Markdown("""
-                <div style="background: #f9fafb; border: 1px solid #e5e7eb;
-                border-radius: 10px; padding: 20px 24px; margin-bottom: 16px;">
-                    <p style="font-weight: 600; font-size: 14px;
-                    margin-bottom: 12px; color: #111827;">
-                        How it works
-                    </p>
-                    <ol style="margin: 0; padding-left: 18px;
-                    color: #374151; font-size: 14px; line-height: 2.2;">
-                        <li><strong>Transcription</strong> : Your audio
-                        file is converted to text automatically</li>
-                        <li><strong>Summarisation</strong> : The text is
-                        condensed into a short, clear summary</li>
-                        <li><strong>Translation</strong> : The summary is
-                        translated into your chosen local language</li>
-                        <li><strong>Audio Generation</strong> : The
-                        translated summary is read aloud and made
-                        available to play</li>
-                    </ol>
-                </div>
+            # how it works section using gr.Group for consistent styling
+            with gr.Group():
+                gr.Markdown("""
+**How it works**
+
+1. **Transcription** : Your audio file is converted to text automatically
+2. **Summarisation** : The text is condensed into a short, clear summary
+3. **Translation** : The summary is translated into your chosen local language
+4. **Audio Generation** : The translated summary is read aloud and made available to play
                 """)
 
             # input type toggle
@@ -303,42 +291,21 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
                 size="lg",
             )
 
-        # right column for info panel — inline styles used for Hugging Face compatibility
+        # right column for info panel using gr.Group for consistent styling
         with gr.Column(scale=2):
-            gr.Markdown("""
-                <div style="background: #f9fafb; border: 1px solid #e5e7eb;
-                border-radius: 10px; padding: 20px 24px;">
-                    <p style="font-weight: 600; font-size: 14px;
-                    margin-bottom: 12px; color: #111827;">
-                        Supported Languages
-                    </p>
-                    <ul style="margin: 0 0 20px 0; padding-left: 18px;
-                    color: #374151; font-size: 14px; line-height: 2.2;">
-                        <li>Luganda</li>
-                        <li>Runyankole</li>
-                        <li>Ateso</li>
-                        <li>Lugbara</li>
-                        <li>Acholi</li>
-                    </ul>
-                    <p style="font-weight: 600; font-size: 14px;
-                    margin-bottom: 12px; color: #111827;">
-                        Audio Requirements
-                    </p>
-                    <ul style="margin: 0 0 20px 0; padding-left: 18px;
-                    color: #374151; font-size: 14px; line-height: 2.2;">
-                        <li>Accepted formats: MP3, WAV, OGG, M4A, AAC</li>
-                        <li>Maximum duration: 5 minutes</li>
-                        <li>Maximum file size: 100MB</li>
-                    </ul>
-                    <p style="font-size: 13px; color: #6b7280;
-                    border-top: 1px solid #e5e7eb;
-                    padding-top: 12px; margin: 0;">
-                        Processing time varies depending on the length
-                        of your input. Summarisation typically takes
-                        between 30 seconds and 5 minutes. Results appear
-                        as each step completes.
-                    </p>
-                </div>
+            with gr.Group():
+                gr.Markdown("""
+**Supported Languages**
+
+Luganda, Runyankole, Ateso, Lugbara, Acholi
+
+**Audio Requirements**
+
+- Accepted formats: MP3, WAV, OGG, M4A, AAC
+- Maximum duration: 5 minutes
+- Maximum file size: 100MB
+
+*Processing time varies. Summarisation typically takes between 30 seconds and 5 minutes. Results appear as each step completes.*
                 """)
 
     # dedicated error display, hidden by default and shown only on errors
