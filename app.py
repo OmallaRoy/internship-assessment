@@ -4,7 +4,7 @@ import os
 import requests as req
 import tempfile
 
-# ensure backend folder is accessible to allow imports from backend folder
+# ensures backend folder is accessible to allow imports from backend folder
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from backend.sunbird_client import (
     transcribe,
@@ -184,19 +184,6 @@ CSS = """
     margin: auto;
     font-family: 'DM Sans', sans-serif;
 }
-.how-it-works {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    padding: 20px 24px;
-    margin-bottom: 16px;
-}
-.info-box {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    padding: 20px 24px;
-}
 #error-box textarea {
     background: #fef2f2 !important;
     border: 1px solid #fca5a5 !important;
@@ -252,9 +239,10 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
         # left column with inputs and controls
         with gr.Column(scale=3):
 
-            # how it works section
+            # how it works section — inline styles used for Hugging Face compatibility
             gr.Markdown("""
-                <div class="how-it-works">
+                <div style="background: #f9fafb; border: 1px solid #e5e7eb;
+                border-radius: 10px; padding: 20px 24px; margin-bottom: 16px;">
                     <p style="font-weight: 600; font-size: 14px;
                     margin-bottom: 12px; color: #111827;">
                         How it works
@@ -315,10 +303,11 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
                 size="lg",
             )
 
-        # right column for info panel
+        # right column for info panel — inline styles used for Hugging Face compatibility
         with gr.Column(scale=2):
             gr.Markdown("""
-                <div class="info-box">
+                <div style="background: #f9fafb; border: 1px solid #e5e7eb;
+                border-radius: 10px; padding: 20px 24px;">
                     <p style="font-weight: 600; font-size: 14px;
                     margin-bottom: 12px; color: #111827;">
                         Supported Languages
@@ -443,7 +432,8 @@ with gr.Blocks(title="Sunbird AI Language Pipeline") as demo:
         ],
     )
 
-demo.launch(
-    theme=THEME,
-    css=CSS,
-)
+if __name__ == "__main__":
+    demo.launch(
+        theme=THEME,
+        css=CSS,
+    )
