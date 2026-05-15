@@ -168,15 +168,16 @@ Results stream in as each step completes so you do not have to wait for everythi
 
 **4. Complete result showing all four outputs**
 
-![Full result](https://raw.githubusercontent.com/OmallaRoy/internship-assessment/main/screenshots/04_full_result.jpg)
+![Full result](https://raw.githubusercontent.com/OmallaRoy/internship-assessment/main/screenshots/04_transcript_result.jpg)
+![Full result](https://raw.githubusercontent.com/OmallaRoy/internship-assessment/main/screenshots/05_other_result.jpg)
 
 **5. Validation error when no input is provided**
 
-![Error handling](https://raw.githubusercontent.com/OmallaRoy/internship-assessment/main/screenshots/05_error_handling.jpg)
+![Error handling](https://raw.githubusercontent.com/OmallaRoy/internship-assessment/main/screenshots/06_error_handling.jpg)
 
 **6. Audio duration error when file exceeds 5 minutes**
 
-![Audio too long error](https://raw.githubusercontent.com/OmallaRoy/internship-assessment/main/screenshots/06_audio_too_long.jpg)
+![Audio too long error](https://raw.githubusercontent.com/OmallaRoy/internship-assessment/main/screenshots/07_audio_too_long.jpg)
 
 ---
 
@@ -188,16 +189,16 @@ Results stream in as each step completes so you do not have to wait for everythi
 
 ## Known Limitations
 
-- **Processing time** — Summarisation uses the Sunflower LLM which can take between 30 seconds and 5 minutes depending on text length and server load on the free tier. This is a server-side limitation and not something the application can control.
+- **Processing time** : Summarisation uses the Sunflower LLM which can take between 30 seconds and 5 minutes depending on text length and server load on the free tier. This is a server-side limitation and not something the application can control.
 
-- **Free tier rate limits** — The Sunbird free tier allows up to 50 requests per minute. Running multiple requests in quick succession may result in temporary rate limiting.
+- **Free tier rate limits** : The Sunbird free tier allows up to 50 requests per minute. Running multiple requests in quick succession may result in temporary rate limiting.
 
-- **Audio URL expiry** — The TTS API returns a signed URL that expires after 2 minutes. The app downloads the audio immediately to avoid playback issues, but very slow connections may occasionally miss the window.
+- **Audio URL expiry** : The text to speech API returns a signed URL that expires after 2 minutes. The app downloads the audio immediately to avoid playback issues, but very slow connections may occasionally miss the window.
 
-- **M4A audio format** — While M4A files are accepted by the app, the Sunbird STT API occasionally returns a server error when processing M4A files. If this happens, converting the file to MP3 or WAV before uploading will resolve the issue.
+- **M4A audio format** : While M4A files are accepted by the app, the Sunbird STT API occasionally returns a server error when processing M4A files. If this happens, converting the file to MP3 or WAV before uploading will resolve the issue.
 
-- **Supported audio formats** — Only MP3, WAV, OGG, M4A and AAC are accepted. Other formats will be rejected with a clear error message before the file is sent to the API.
+- **Supported audio formats** : Only MP3, WAV, OGG, M4A and AAC are accepted. Other formats will be rejected with a clear error message before the file is sent to the API.
 
-- **Supported languages** — Translation and TTS are limited to the five Ugandan languages supported by the Sunbird API: Luganda, Runyankole, Ateso, Lugbara, and Acholi.
+- **Supported languages** : Translation and TTS are limited to the five Ugandan languages supported by the Sunbird API: Luganda, Runyankole, Ateso, Lugbara, and Acholi.
 
-- **Audio duration** — Files longer than 5 minutes are rejected before being sent to the API. The Sunbird STT API itself trims audio at 10 minutes, but this app enforces a stricter 5-minute limit as required by the assessment.
+- **Audio duration** : Files longer than 5 minutes are rejected before being sent to the API. The Sunbird speech to text API itself trims audio at 10 minutes, but this app enforces a stricter 5-minute limit as required by the assessment.
