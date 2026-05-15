@@ -220,6 +220,7 @@ CSS = """
 }
 footer {
     display: none !important;
+    height: 0 !important;
 }
 """
 
